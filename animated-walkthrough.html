@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Studio Exporter — Animated Walkthrough</title>
+<style>
+/* ── Reset & Base ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: #0f0f0f;
+  color: #e0e0e0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── Section shells ───────────────────────────────────────────────── */
+.section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 60px 40px 80px;
+  position: relative;
+}
+.section:nth-child(even) { background: #111; }
+
+.section-header {
+  text-align: center;
+  margin-bottom: 36px;
+  max-width: 720px;
+}
+.section-header h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+.section-header p {
+  color: #aaa;
+  font-size: 1rem;
+}
+
+/* ── Sticky dot nav ───────────────────────────────────────────────── */
+#dot-nav {
+  position: fixed;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #444;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.3s;
+  border: none;
+  padding: 0;
+}
+.dot.active { background: #4285f4; transform: scale(1.4); }
+.dot:hover { background: #888; }
+
+/* ── Slider controls ──────────────────────────────────────────────── */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 32px;
+  justify-content: center;
+  margin-top: 24px;
+  padding: 16px 24px;
+  background: #1a1a1a;
+  border-radius: 10px;
+  border: 1px solid #2a2a2a;
+}
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.875rem;
+  color: #ccc;
+}
+.control-group label { white-space: nowrap; }
+.control-group span {
+  min-width: 52px;
+  text-align: right;
+  color: #4285f4;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 130px;
+  height: 4px;
+  border-radius: 2px;
+  background: #333;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #4285f4;
+  cursor: pointer;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #4285f4;
+  cursor: pointer;
+  border: none;
+}
+.btn {
+  background: #1e2a3a;
+  border: 1px solid #4285f4;
+  color: #4285f4;
+  padding: 6px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: background 0.2s, color 0.2s;
+}
+.btn:hover { background: #4285f4; color: #fff; }
+.btn.active { background: #4285f4; color: #fff; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 1 — Pipeline
+═══════════════════════════════════════════════════════════════════ */
+#s-pipeline .pipeline-wrap {
+  width: 100%;
+  max-width: 900px;
+}
+#pipeline-svg {
+  width: 100%;
+  height: 220px;
+  display: block;
+}
+.pipe-format-btns {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+}
+.pipe-format-btns .btn { min-width: 100px; text-align: center; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 2 — Auth
+═══════════════════════════════════════════════════════════════════ */
+#s-auth .auth-layout {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 24px;
+  align-items: center;
+  width: 100%;
+  max-width: 900px;
+}
+.auth-inputs, .auth-outputs { display: flex; flex-direction: column; gap: 12px; }
+.auth-field {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: #ccc;
+  word-break: break-all;
+}
+.auth-field strong { color: #4285f4; display: block; margin-bottom: 2px; font-size: 0.75rem; }
+.sha1-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.sha1-core {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 2px solid #4285f4;
+  border-radius: 12px;
+  padding: 18px 24px;
+  text-align: center;
+  color: #4285f4;
+  font-weight: 700;
+  font-size: 1.1rem;
+  box-shadow: 0 0 20px rgba(66,133,244,0.3);
+}
+.auth-concat {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  color: #aaa;
+  word-break: break-all;
+  max-width: 900px;
+  width: 100%;
+  margin-top: 16px;
+}
+.auth-concat strong { color: #4285f4; }
+.hash-output {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+.hash-output .hash-label { color: #888; font-size: 0.75rem; margin-bottom: 4px; }
+.hash-output .hash-value {
+  font-family: 'Courier New', monospace;
+  font-size: 0.78rem;
+  color: #44aa88;
+  word-break: break-all;
+  min-height: 1.4em;
+}
+.avalanche-note {
+  background: #1a1500;
+  border: 1px solid #aa9944;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 0.8rem;
+  color: #cc9;
+  margin-top: 12px;
+  max-width: 900px;
+  text-align: center;
+}
+.arrow-right {
+  color: #4285f4;
+  font-size: 1.5rem;
+  padding: 0 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 3 — Parser
+═══════════════════════════════════════════════════════════════════ */
+#s-parser .parser-wrap { width: 100%; max-width: 860px; }
+.flip-container {
+  perspective: 1000px;
+  width: 100%;
+  margin-bottom: 24px;
+}
+.flip-inner {
+  position: relative;
+  width: 100%;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+.flip-inner.flipped { transform: rotateY(180deg); }
+.flip-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  width: 100%;
+}
+.flip-face.back {
+  position: absolute;
+  top: 0;
+  transform: rotateY(180deg);
+}
+.parser-grid {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+.parser-grid.prompt-grid { grid-template-columns: repeat(4, 1fr); }
+.parser-grid.message-grid { grid-template-columns: repeat(4, 1fr); }
+.grid-cell {
+  background: #1c1c1c;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 10px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  font-size: 0.8rem;
+}
+.grid-cell .cell-index { color: #555; font-size: 0.7rem; }
+.grid-cell .cell-name { color: #e0e0e0; font-weight: 600; font-size: 0.75rem; margin-top: 2px; }
+.grid-cell.used { border-color: #4285f4; }
+.grid-cell.used .cell-name { color: #4285f4; }
+.grid-cell.active {
+  background: #1a2a3a;
+  border-color: #44aa88;
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(68,170,136,0.4);
+}
+.grid-cell.active .cell-name { color: #44aa88; }
+.grid-cell.greyed { opacity: 0.35; }
+.parser-detail {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 16px 20px;
+  font-size: 0.875rem;
+  min-height: 100px;
+}
+.parser-detail .detail-index { color: #4285f4; font-size: 1.2rem; font-weight: 700; }
+.parser-detail .detail-field { color: #44aa88; font-size: 1rem; font-weight: 600; }
+.parser-detail .detail-example { font-family: 'Courier New', monospace; color: #ccc; font-size: 0.8rem; margin-top: 6px; }
+.parser-detail .detail-usage { color: #888; font-size: 0.8rem; margin-top: 4px; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 4 — Formats
+═══════════════════════════════════════════════════════════════════ */
+#s-formats .formats-wrap { width: 100%; max-width: 1100px; }
+.format-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  width: 100%;
+}
+.format-panel {
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.format-panel-header {
+  background: #1e1e1e;
+  padding: 10px 16px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #aaa;
+  border-bottom: 1px solid #2a2a2a;
+}
+.format-panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  max-height: 400px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  white-space: pre;
+  line-height: 1.5;
+  color: #ccc;
+}
+.format-panel-content::-webkit-scrollbar { width: 6px; }
+.format-panel-content::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+/* JSON highlighting */
+.jk { color: #9cdcfe; } /* key */
+.js { color: #ce9178; } /* string value */
+.jn { color: #b5cea8; } /* number */
+.jb { color: #569cd6; } /* bool/null */
+/* HTML preview */
+.html-preview {
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 0.8rem;
+  white-space: normal;
+  color: #e0e0e0;
+}
+.html-preview .hp-title { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+.html-preview .hp-meta { color: #888; font-size: 0.75rem; margin-bottom: 12px; }
+.hp-msg { margin-bottom: 10px; padding: 8px 10px; border-radius: 6px; font-size: 0.8rem; }
+.hp-msg.user { background: rgba(68,170,136,0.15); border-left: 3px solid #44aa88; }
+.hp-msg.model { background: rgba(68,153,170,0.15); border-left: 3px solid #4499aa; }
+.hp-msg.thinking { background: rgba(170,153,68,0.1); border-left: 3px solid #aa9944; font-style: italic; }
+.hp-msg .hp-role { font-weight: 600; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px; }
+.hp-msg.user .hp-role { color: #44aa88; }
+.hp-msg.model .hp-role { color: #4499aa; }
+.hp-msg.thinking .hp-role { color: #aa9944; }
+.toggle-wrap { display: flex; align-items: center; gap: 10px; }
+.toggle-label { font-size: 0.875rem; color: #ccc; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 5 — Bulk
+═══════════════════════════════════════════════════════════════════ */
+#s-bulk .bulk-wrap { width: 100%; max-width: 900px; }
+.page-cards-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 70px;
+  margin-bottom: 24px;
+  align-items: center;
+}
+.page-card {
+  background: #1e2a3a;
+  border: 1px solid #4285f4;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.78rem;
+  color: #4285f4;
+  position: relative;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s, transform 0.4s;
+}
+.page-card.visible { opacity: 1; transform: translateY(0); }
+.page-card.done { border-color: #44aa88; color: #44aa88; background: #1a2a22; }
+.page-arrow { color: #555; font-size: 1.2rem; }
+.bulk-counter { font-size: 1.1rem; color: #4285f4; font-weight: 700; margin-bottom: 20px; }
+.tile-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 120px;
+  margin-bottom: 16px;
+}
+.tile {
+  width: 52px;
+  height: 36px;
+  border-radius: 5px;
+  background: #2a2a2a;
+  font-size: 0.6rem;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2px;
+  transition: background 0.3s, color 0.3s;
+  overflow: hidden;
+  word-break: break-all;
+}
+.tile.fetching { background: #1e2a3a; color: #4285f4; animation: tpulse 0.6s infinite alternate; }
+.tile.parsing { background: #1a2a2a; color: #4499aa; }
+.tile.done { background: #1a2a22; color: #44aa88; }
+.tile.failed { background: #2a1a1a; color: #cc4444; }
+@keyframes tpulse { from { box-shadow: 0 0 0 rgba(66,133,244,0.4); } to { box-shadow: 0 0 8px rgba(66,133,244,0.8); } }
+.progress-bar-wrap {
+  width: 100%;
+  background: #222;
+  border-radius: 4px;
+  height: 12px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4285f4, #44aa88);
+  border-radius: 4px;
+  width: 0%;
+  transition: width 0.3s;
+}
+.progress-label { font-size: 0.8rem; color: #888; text-align: right; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SECTION 6 — Observer
+═══════════════════════════════════════════════════════════════════ */
+#s-observer .observer-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  width: 100%;
+  max-width: 900px;
+}
+.dom-tree-panel {
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 16px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+}
+.dom-tree-panel h3 { font-family: 'Segoe UI', sans-serif; font-size: 0.9rem; color: #aaa; margin-bottom: 12px; }
+.dom-node { color: #569cd6; padding: 2px 0; }
+.dom-node .tag { color: #4ec9b0; }
+.dom-node .attr { color: #9cdcfe; }
+.dom-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  margin: 3px 0;
+  transition: background 0.3s;
+}
+.dom-row.new-row { animation: rowSlideIn 0.5s ease-out; }
+@keyframes rowSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.dom-row .msg-icon { font-size: 1rem; }
+.dom-row .msg-btns { margin-left: auto; display: flex; gap: 4px; }
+.msg-btn {
+  background: #1e2a3a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  color: #888;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  cursor: default;
+  transition: all 0.3s;
+}
+.msg-btn.injected { border-color: #4285f4; color: #4285f4; animation: btnIn 0.4s ease-out; }
+@keyframes btnIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+.observer-eye {
+  font-size: 1.5rem;
+  display: inline-block;
+  transition: transform 0.3s, filter 0.3s;
+  margin-bottom: 8px;
+}
+.observer-eye.pulse {
+  animation: eyePulse 0.6s ease-out;
+}
+@keyframes eyePulse {
+  0% { transform: scale(1); filter: none; }
+  50% { transform: scale(1.6); filter: drop-shadow(0 0 8px #4285f4); }
+  100% { transform: scale(1); filter: none; }
+}
+.log-panel {
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 16px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  overflow-y: auto;
+  max-height: 420px;
+  display: flex;
+  flex-direction: column;
+}
+.log-panel h3 { font-family: 'Segoe UI', sans-serif; font-size: 0.9rem; color: #aaa; margin-bottom: 12px; }
+.log-entry { padding: 2px 0; line-height: 1.5; }
+.log-time { color: #555; }
+.log-mutation { color: #aa9944; }
+.log-call { color: #4285f4; }
+.log-found { color: #4499aa; }
+.log-action { color: #44aa88; }
+.log-set { color: #888; }
+</style>
+</head>
+<body>
+
+<!-- ── Dot Nav ──────────────────────────────────────────────────────── -->
+<nav id="dot-nav" aria-label="Section navigation">
+  <button class="dot active" data-section="s-pipeline" title="Pipeline"></button>
+  <button class="dot" data-section="s-auth" title="Auth"></button>
+  <button class="dot" data-section="s-parser" title="Parser"></button>
+  <button class="dot" data-section="s-formats" title="Formats"></button>
+  <button class="dot" data-section="s-bulk" title="Bulk Export"></button>
+  <button class="dot" data-section="s-observer" title="Observer"></button>
+</nav>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     SECTION 1 — Pipeline
+═════════════════════════════════════════════════════════════════════ -->
+<section class="section" id="s-pipeline">
+  <div class="section-header">
+    <h2>Export Pipeline</h2>
+    <p>Every export follows six stages — from a single button click to a downloaded file.</p>
+  </div>
+
+  <div class="pipeline-wrap">
+    <svg id="pipeline-svg" viewBox="0 0 860 200" xmlns="http://www.w3.org/2000/svg"></svg>
+
+    <div class="pipe-format-btns">
+      <button class="btn active" id="pfmt-md" onclick="setPipelineFormat('md')">📄 Markdown</button>
+      <button class="btn" id="pfmt-json" onclick="setPipelineFormat('json')">{ } JSON</button>
+      <button class="btn" id="pfmt-html" onclick="setPipelineFormat('html')">🌐 HTML</button>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Speed</label>
+        <input type="range" id="pipeline-speed" min="0.5" max="3" step="0.1" value="1">
+        <span id="pipeline-speed-val">1.0×</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     SECTION 2 — Auth
+═════════════════════════════════════════════════════════════════════ -->
+<section class="section" id="s-auth">
+  <div class="section-header">
+    <h2>SAPISIDHASH Authentication</h2>
+    <p>Google's web auth scheme: SHA-1 over a timestamp, SAPISID cookie, and origin — computed fresh on every request.</p>
+  </div>
+
+  <div class="auth-layout">
+    <div class="auth-inputs">
+      <div class="auth-field"><strong>Timestamp</strong><span id="auth-ts-display">1741958400</span></div>
+      <div class="auth-field"><strong>SAPISID cookie</strong><span id="auth-sapisid-display">aGVsbG8gd29ybGQ=</span></div>
+      <div class="auth-field"><strong>Origin</strong><span id="auth-origin-display">https://aistudio.google.com</span></div>
+    </div>
+
+    <div class="arrow-right">
+      <span>──►</span>
+      <div class="sha1-core">SHA-1</div>
+      <span>──►</span>
+    </div>
+
+    <div class="auth-outputs">
+      <div class="hash-output">
+        <div class="hash-label">SAPISIDHASH</div>
+        <div class="hash-value" id="hash-1">computing…</div>
+      </div>
+      <div class="hash-output">
+        <div class="hash-label">SAPISID1PHASH</div>
+        <div class="hash-value" id="hash-2">computing…</div>
+      </div>
+      <div class="hash-output">
+        <div class="hash-label">SAPISID3PHASH</div>
+        <div class="hash-value" id="hash-3">computing…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-concat">
+    <strong>Input string: </strong><span id="auth-concat-display"></span>
+  </div>
+
+  <div class="avalanche-note">
+    ⚡ Avalanche effect: changing 1 second in the timestamp → completely different 40-char hash output
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>Timestamp offset</label>
+      <input type="range" id="auth-ts-slider" min="0" max="86400" step="1" value="0">
+      <span id="auth-ts-val">1741958400</span>
+    </div>
+    <div class="control-group">
+      <label>SAPISID length</label>
+      <input type="range" id="auth-sapisid-len" min="4" max="40" step="1" value="16">
+      <span id="auth-sapisid-len-val">16 chars</span>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     SECTION 3 — Parser
+═════════════════════════════════════════════════════════════════════ -->
+<section class="section" id="s-parser">
+  <div class="section-header">
+    <h2>The Positional Array Protocol</h2>
+    <p>Google's API returns arrays-of-arrays with no field names — just positional indices. The Parser maps magic numbers to meaning.</p>
+  </div>
+
+  <div class="parser-wrap">
+    <div style="display:flex;gap:12px;justify-content:center;margin-bottom:16px;">
+      <button class="btn active" id="parser-toggle" onclick="toggleParserGrid()">Flip to Message-level ↺</button>
+    </div>
+
+    <div class="flip-container">
+      <div class="flip-inner" id="parser-flip-inner">
+        <!-- Front: Prompt grid -->
+        <div class="flip-face front">
+          <div style="text-align:center;color:#888;font-size:0.8rem;margin-bottom:8px;">Prompt-level array (indices 0–15)</div>
+          <div class="parser-grid prompt-grid" id="prompt-grid"></div>
+        </div>
+        <!-- Back: Message grid -->
+        <div class="flip-face back">
+          <div style="text-align:center;color:#888;font-size:0.8rem;margin-bottom:8px;">Message-level array (indices 0–18)</div>
+          <div class="parser-grid message-grid" id="message-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="parser-detail" id="parser-detail">
+      <div style="color:#555;font-size:0.9rem;">Select an index to see details.</div>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Active index</label>
+        <input type="range" id="parser-index-slider" min="0" max="15" step="1" value="0">
+        <span id="parser-index-val">0</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     SECTION 4 — Formats
+═════════════════════════════════════════════════════════════════════ -->
+<section class="section" id="s-formats">
+  <div class="section-header">
+    <h2>Three Export Formats, One Conversation</h2>
+    <p>The same parsed conversation object flows into three different formatters — same data, three presentations.</p>
+  </div>
+
+  <div class="formats-wrap">
+    <div class="controls" style="margin-bottom:16px;">
+      <div class="control-group toggle-wrap">
+        <button class="btn active" id="toggle-cot" onclick="toggleOpt('cot')">💭 Chain-of-Thought: ON</button>
+      </div>
+      <div class="control-group toggle-wrap">
+        <button class="btn active" id="toggle-cit" onclick="toggleOpt('cit')">🔗 Citations: ON</button>
+      </div>
+      <div class="control-group toggle-wrap">
+        <button class="btn active" id="toggle-tok" onclick="toggleOpt('tok')">🔢 Token Counts: ON</button>
+      </div>
+      <div class="control-group">
+        <label>Token multiplier</label>
+        <input type="range" id="tok-mult" min="0.1" max="5" step="0.1" value="1">
+        <span id="tok-mult-val">1.0×</span>
+      </div>
+    </div>
+
+    <div class="format-panels">
+      <div class="format-panel">
+        <div class="format-panel-header">📄 Markdown</div>
+        <div class="format-panel-content" id="panel-md"></div>
+      </div>
+      <div class="format-panel">
+        <div class="format-panel-header">{ } JSON</div>
+        <div class="format-panel-content" id="panel-json"></div>
+      </div>
+      <div class="format-panel">
+        <div class="format-panel-header">🌐 HTML Preview</div>
+        <div class="format-panel-content html-preview" id="panel-html" style="white-space:normal;"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     SECTION 5 — Bulk
+═════════════════════════════════════════════════════════════════════ -->
+<section class="section" id="s-bulk">
+  <div class="section-header">
+    <h2>Bulk Export: Pagination + ZIP Assembly</h2>
+    <p>getAllPrompts pages through conversations 100 at a time, then each is fetched, formatted, and packed into a ZIP.</p>
+  </div>
+
+  <div class="bulk-wrap">
+    <div style="font-size:0.8rem;color:#888;margin-bottom:8px;">Phase 1 — Pagination</div>
+    <div class="page-cards-row" id="page-cards-row"></div>
+    <div class="bulk-counter" id="bulk-counter">0 conversations found</div>
+
+    <div style="font-size:0.8rem;color:#888;margin-bottom:8px;">Phase 2 — Export loop</div>
+    <div class="tile-grid" id="tile-grid"></div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill"></div></div>
+    <div class="progress-label" id="progress-label">0 / 0</div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Total conversations</label>
+        <input type="range" id="bulk-count" min="10" max="500" step="10" value="50">
+        <span id="bulk-count-val">50</span>
+      </div>
+      <div class="control-group">
+        <label>Delay per conv.</label>
+        <input type="range" id="bulk-delay" min="0" max="300" step="10" value="80">
+        <span id="bulk-delay-val">80 ms</span>
+      </div>
+      <div class="control-group">
+        <button class="btn" id="bulk-run-btn" onclick="bulkRun()">▶ Run</button>
+        <button class="btn" onclick="bulkReset()">↺ Reset</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     SECTION 6 — Observer
+═════════════════════════════════════════════════════════════════════ -->
+<section class="section" id="s-observer">
+  <div class="section-header">
+    <h2>MutationObserver: DOM Enhancement on Demand</h2>
+    <p>A MutationObserver watches the entire document. Each new message triggers enhanceMessages(), which injects Branch and Delete shortcut buttons.</p>
+  </div>
+
+  <div class="observer-wrap">
+    <div class="dom-tree-panel">
+      <h3><span class="observer-eye" id="obs-eye">👁</span> Simulated DOM Tree</h3>
+      <div style="font-family:'Courier New',monospace;font-size:0.78rem;color:#555;margin-bottom:10px;">
+        &lt;body&gt;<br>
+        &nbsp;&nbsp;└─ &lt;main&gt;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ &lt;chat-container&gt;
+      </div>
+      <div id="dom-rows" style="padding-left:80px;"></div>
+    </div>
+
+    <div class="log-panel" id="obs-log">
+      <h3>Observer Log</h3>
+      <div id="obs-log-entries"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>Mutation rate</label>
+      <input type="range" id="obs-rate" min="500" max="5000" step="100" value="2000">
+      <span id="obs-rate-val">2000 ms</span>
+    </div>
+    <div class="control-group">
+      <label>Enhancement delay</label>
+      <input type="range" id="obs-delay" min="0" max="300" step="10" value="150">
+      <span id="obs-delay-val">150 ms</span>
+    </div>
+    <div class="control-group">
+      <button class="btn" onclick="obsReset()">↺ Reset</button>
+    </div>
+  </div>
+</section>
+
+<script>
+/* ════════════════════════════════════════════════════════════════════
+   DOT NAV
+═════════════════════════════════════════════════════════════════════ */
+const sections = ['s-pipeline','s-auth','s-parser','s-formats','s-bulk','s-observer'];
+const dots = document.querySelectorAll('.dot');
+
+dots.forEach(dot => {
+  dot.addEventListener('click', () => {
+    document.getElementById(dot.dataset.section).scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting && e.intersectionRatio >= 0.4) {
+      const idx = sections.indexOf(e.target.id);
+      dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    }
+  });
+}, { threshold: 0.4 });
+
+sections.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) io.observe(el);
+});
+
+/* ════════════════════════════════════════════════════════════════════
+   SECTION 1 — PIPELINE SVG + PARTICLES
+═════════════════════════════════════════════════════════════════════ */
+const PIPELINE_NODES = [
+  { label: '👆 User Click',  color: '#4285f4' },
+  { label: '🔐 API Auth',   color: '#9c27b0' },
+  { label: '📡 RPC Fetch',  color: '#f57c00' },
+  { label: '🔧 Parser',     color: '#00838f' },
+  { label: '📄 Exporter',   color: '#44aa88', id: 'node-exporter' },
+  { label: '💾 Download',   color: '#4285f4' },
+];
+
+const FORMAT_COLORS = { md: '#44aa88', json: '#f57c00', html: '#9c27b0' };
+let pipelineFormat = 'md';
+let pipelineSpeed = 1;
+
+const psvg = document.getElementById('pipeline-svg');
+const W = 860, H = 200;
+const nodeR = 30;
+const nodeXs = [80, 210, 340, 470, 600, 730];
+const nodeY = 110;
+
+// Build SVG nodes and paths
+let svgHTML = '';
+
+// Draw connecting paths
+for (let i = 0; i < nodeXs.length - 1; i++) {
+  const x1 = nodeXs[i] + nodeR, x2 = nodeXs[i+1] - nodeR;
+  const mid = (x1 + x2) / 2;
+  svgHTML += `<path id="pipe-path-${i}" d="M${x1},${nodeY} C${mid},${nodeY} ${mid},${nodeY} ${x2},${nodeY}"
+    stroke="#2a2a2a" stroke-width="8" fill="none" stroke-linecap="round"/>`;
+}
+
+// Draw node circles
+PIPELINE_NODES.forEach((n, i) => {
+  const x = nodeXs[i];
+  const col = (i === 4) ? FORMAT_COLORS[pipelineFormat] : n.color;
+  const eid = (i === 4) ? 'id="node-exporter-circle"' : `id="node-circle-${i}"`;
+  const textId = (i === 4) ? 'id="node-exporter-text"' : `id="node-text-${i}"`;
+  svgHTML += `
+    <circle ${eid} cx="${x}" cy="${nodeY}" r="${nodeR}" fill="#1a1a1a" stroke="${col}" stroke-width="2.5"/>
+    <text ${textId} x="${x}" y="${nodeY - 6}" text-anchor="middle" font-size="16" fill="${col}">${n.label.split(' ')[0]}</text>
+    <text x="${x}" y="${nodeY + 12}" text-anchor="middle" font-size="10" fill="#888">${n.label.split(' ').slice(1).join(' ')}</text>`;
+});
+
+psvg.innerHTML = svgHTML;
+
+// Particle system
+const particles = [];
+
+function spawnParticle() {
+  const seg = Math.floor(Math.random() * 5);
+  particles.push({ seg, t: 0, id: Math.random() });
+}
+
+function getPathPoint(seg, t) {
+  const x1 = nodeXs[seg] + nodeR;
+  const x2 = nodeXs[seg + 1] - nodeR;
+  const mid = (x1 + x2) / 2;
+  // Cubic bezier with control points at mid
+  const mt = 1 - t;
+  const x = mt * mt * mt * x1 + 3 * mt * mt * t * mid + 3 * mt * t * t * mid + t * t * t * x2;
+  return { x, y: nodeY };
+}
+
+const particleEls = {};
+
+function pipelineFrame() {
+  // Spawn
+  if (Math.random() < 0.04 * pipelineSpeed) spawnParticle();
+
+  // Update
+  const toRemove = [];
+  particles.forEach(p => {
+    p.t += 0.008 * pipelineSpeed;
+    if (p.t > 1) { toRemove.push(p.id); return; }
+    const col = PIPELINE_NODES[p.seg].color;
+    if (!particleEls[p.id]) {
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('r', '6');
+      c.setAttribute('fill', col);
+      c.setAttribute('opacity', '0.9');
+      psvg.appendChild(c);
+      particleEls[p.id] = c;
+    }
+    const pt = getPathPoint(p.seg, p.t);
+    particleEls[p.id].setAttribute('cx', pt.x);
+    particleEls[p.id].setAttribute('cy', pt.y);
+    particleEls[p.id].setAttribute('fill', col);
+  });
+
+  toRemove.forEach(id => {
+    if (particleEls[id]) { psvg.removeChild(particleEls[id]); delete particleEls[id]; }
+    const idx = particles.findIndex(p => p.id === id);
+    if (idx !== -1) particles.splice(idx, 1);
+  });
+
+  requestAnimationFrame(pipelineFrame);
+}
+
+requestAnimationFrame(pipelineFrame);
+
+function setPipelineFormat(fmt) {
+  pipelineFormat = fmt;
+  ['md','json','html'].forEach(f => document.getElementById('pfmt-'+f).classList.toggle('active', f === fmt));
+  const c = FORMAT_COLORS[fmt];
+  const circle = document.getElementById('node-exporter-circle');
+  if (circle) circle.setAttribute('stroke', c);
+  const txt = document.getElementById('node-exporter-text');
+  if (txt) txt.setAttribute('fill', c);
+}
+
+document.getElementById('pipeline-speed').oninput = function() {
+  pipelineSpeed = parseFloat(this.value);
+  document.getElementById('pipeline-speed-val').textContent = pipelineSpeed.toFixed(1) + '×';
+};
+
+/* ════════════════════════════════════════════════════════════════════
+   SECTION 2 — AUTH / SHA-1
+═════════════════════════════════════════════════════════════════════ */
+const BASE_TS = 1741958400;
+const ORIGIN = 'https://aistudio.google.com';
+
+// Deterministic fake SAPISID from length
+function fakeSapisid(len) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let s = '';
+  // Use len as seed for deterministic output
+  let seed = len * 6364136223846793005n || 0;
+  for (let i = 0; i < len; i++) {
+    seed = (BigInt(len * 31 + i * 127 + 99) * BigInt(i + 1) * 6364136223846793005n + 1442695040888963407n) & 0xFFFFFFFFFFFFFFFFn;
+    s += chars[Number(seed % 64n)];
+  }
+  return s;
+}
+
+async function sha1hex(str) {
+  const buf = new TextEncoder().encode(str);
+  const hash = await crypto.subtle.digest('SHA-1', buf);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+let authTypingTimer = null;
+
+async function recomputeAuth() {
+  const tsOffset = parseInt(document.getElementById('auth-ts-slider').value);
+  const sapLen = parseInt(document.getElementById('auth-sapisid-len').value);
+  const ts = BASE_TS + tsOffset;
+  const sapisid = fakeSapisid(sapLen);
+
+  document.getElementById('auth-ts-display').textContent = ts;
+  document.getElementById('auth-sapisid-display').textContent = sapisid;
+  document.getElementById('auth-ts-val').textContent = ts;
+  document.getElementById('auth-sapisid-len-val').textContent = sapLen + ' chars';
+
+  const concatStr = `${ts} ${sapisid} ${ORIGIN}`;
+  document.getElementById('auth-concat-display').textContent = concatStr;
+
+  const hex = await sha1hex(concatStr);
+
+  const prefixes = ['SAPISIDHASH', 'SAPISID1PHASH', 'SAPISID3PHASH'];
+  const ids = ['hash-1', 'hash-2', 'hash-3'];
+  const variants = [sapisid, '__' + sapisid, '___' + sapisid];
+
+  for (let i = 0; i < 3; i++) {
+    let h = hex;
+    if (i > 0) {
+      const v = await sha1hex(`${ts} ${variants[i]} ${ORIGIN}`);
+      h = v;
+    }
+    typewriterUpdate(ids[i], `${ts}_${h}`);
+  }
+}
+
+function typewriterUpdate(elId, text) {
+  const el = document.getElementById(elId);
+  el.textContent = '';
+  let i = 0;
+  function tick() {
+    if (i < text.length) {
+      el.textContent += text[i++];
+      setTimeout(tick, 12);
+    }
+  }
+  tick();
+}
+
+document.getElementById('auth-ts-slider').oninput = recomputeAuth;
+document.getElementById('auth-sapisid-len').oninput = recomputeAuth;
+recomputeAuth();
+
+/* ════════════════════════════════════════════════════════════════════
+   SECTION 3 — PARSER GRID
+═════════════════════════════════════════════════════════════════════ */
+const PROMPT_DATA = {
+  0:  { name: 'id',     example: '"aBcDeFgH"',         usage: 'prompt[0] → conversation ID' },
+  3:  { name: 'config', example: '{ temperature: 1 }', usage: 'prompt[3] → model config object' },
+  4:  { name: 'meta',   example: '"My chat title"',    usage: 'prompt[4] → title / metadata' },
+  13: { name: 'msgs',   example: '[…array of turns…]', usage: 'prompt[13] → messages array' },
+};
+const MESSAGE_DATA = {
+  0:  { name: 'content',  example: '"Can you explain…"',       usage: 'msg[0] → text content' },
+  8:  { name: 'role',     example: '1 (user) / 2 (model)',     usage: 'msg[8] → author role int' },
+  15: { name: 'citations',example: '[["https://docs.py…"]]',   usage: 'msg[15] → citation URLs' },
+  16: { name: 'hasCite',  example: 'true',                     usage: 'msg[16] → citation flag' },
+  18: { name: 'tokens',   example: '342',                       usage: 'msg[18] → token count' },
+};
+
+let parserOnMessage = false;
+let parserActiveIdx = 0;
+
+function buildGrid(container, count, usedMap) {
+  container.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'grid-cell' + (usedMap[i] ? ' used' : ' greyed');
+    cell.dataset.index = i;
+    cell.innerHTML = `<div class="cell-index">[${i}]</div><div class="cell-name">${usedMap[i] ? usedMap[i].name : '?'}</div>`;
+    cell.onclick = () => setParserActive(i);
+    container.appendChild(cell);
+  }
+}
+
+function setParserActive(idx) {
+  parserActiveIdx = idx;
+  document.getElementById('parser-index-slider').value = idx;
+  document.getElementById('parser-index-val').textContent = idx;
+  updateParserHighlight();
+}
+
+function updateParserHighlight() {
+  const idx = parserActiveIdx;
+  const data = parserOnMessage ? MESSAGE_DATA : PROMPT_DATA;
+  const count = parserOnMessage ? 19 : 16;
+  const gridId = parserOnMessage ? 'message-grid' : 'prompt-grid';
+  const cells = document.getElementById(gridId).querySelectorAll('.grid-cell');
+  cells.forEach(c => {
+    const ci = parseInt(c.dataset.index);
+    c.classList.toggle('active', ci === idx);
+  });
+  const detail = document.getElementById('parser-detail');
+  if (data[idx]) {
+    detail.innerHTML = `
+      <div class="detail-index">Index [${idx}]</div>
+      <div class="detail-field">${data[idx].name}</div>
+      <div class="detail-example">Example: <code>${data[idx].example}</code></div>
+      <div class="detail-usage">${data[idx].usage}</div>`;
+  } else {
+    detail.innerHTML = `<div class="detail-index">Index [${idx}]</div><div style="color:#555;margin-top:8px;">Unused / unknown field</div>`;
+  }
+}
+
+buildGrid(document.getElementById('prompt-grid'), 16, PROMPT_DATA);
+buildGrid(document.getElementById('message-grid'), 19, MESSAGE_DATA);
+updateParserHighlight();
+
+function toggleParserGrid() {
+  parserOnMessage = !parserOnMessage;
+  document.getElementById('parser-flip-inner').classList.toggle('flipped', parserOnMessage);
+  document.getElementById('parser-toggle').textContent = parserOnMessage ? 'Flip to Prompt-level ↺' : 'Flip to Message-level ↺';
+  const maxIdx = parserOnMessage ? 18 : 15;
+  document.getElementById('parser-index-slider').max = maxIdx;
+  if (parserActiveIdx > maxIdx) parserActiveIdx = 0;
+  updateParserHighlight();
+}
+
+document.getElementById('parser-index-slider').oninput = function() {
+  parserActiveIdx = parseInt(this.value);
+  document.getElementById('parser-index-val').textContent = parserActiveIdx;
+  updateParserHighlight();
+};
+
+/* ════════════════════════════════════════════════════════════════════
+   SECTION 4 — FORMAT PANELS
+═════════════════════════════════════════════════════════════════════ */
+const fmtOpts = { cot: true, cit: true, tok: true };
+let tokMult = 1.0;
+
+const CONV = {
+  title: 'Python async/await explained',
+  model: 'gemini-2.0-flash-thinking-exp',
+  author: 'user@example.com',
+  updated: 'Mar 15, 2025',
+  messages: [
+    { role: 'user',     tokens: 342,  content: "Can you explain Python's async/await pattern?" },
+    { role: 'thinking', tokens: 1205, content: "**Thinking**\nLet me break this down carefully..." },
+    { role: 'model',    tokens: 892,  content: "Async/await is built on Python's coroutine system..." },
+  ],
+  citations: ['https://docs.python.org/3/library/asyncio.html'],
+  searchQueries: ['python asyncio tutorial'],
+};
+
+function toggleOpt(key) {
+  fmtOpts[key] = !fmtOpts[key];
+  const btn = document.getElementById('toggle-' + key);
+  const labels = { cot: '💭 Chain-of-Thought', cit: '🔗 Citations', tok: '🔢 Token Counts' };
+  btn.textContent = `${labels[key]}: ${fmtOpts[key] ? 'ON' : 'OFF'}`;
+  btn.classList.toggle('active', fmtOpts[key]);
+  renderFormats();
+}
+
+document.getElementById('tok-mult').oninput = function() {
+  tokMult = parseFloat(this.value);
+  document.getElementById('tok-mult-val').textContent = tokMult.toFixed(1) + '×';
+  renderFormats();
+};
+
+function getMsgs() {
+  return CONV.messages.filter(m => fmtOpts.cot || m.role !== 'thinking');
+}
+
+function tokStr(base) {
+  return Math.round(base * tokMult);
+}
+
+function renderMarkdown() {
+  const msgs = getMsgs();
+  let out = `# ${CONV.title}\n\n`;
+  out += `*Model: ${CONV.model}*  \n`;
+  out += `*Author: ${CONV.author}*  \n`;
+  out += `*Updated: ${CONV.updated}*\n\n---\n\n`;
+  msgs.forEach(m => {
+    const tok = fmtOpts.tok ? ` *(${tokStr(m.tokens)} tokens)*` : '';
+    out += `## ${m.role === 'user' ? '👤 User' : m.role === 'thinking' ? '💭 Thinking' : '🤖 Model'}${tok}\n\n`;
+    out += m.content + '\n\n';
+  });
+  if (fmtOpts.cit) {
+    out += `---\n\n## Sources\n\n`;
+    CONV.citations.forEach(c => out += `- ${c}\n`);
+    out += `\n*Search queries: ${CONV.searchQueries.map(q => `"${q}"`).join(', ')}*\n`;
+  }
+  return out;
+}
+
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderJSON() {
+  const msgs = getMsgs().map(m => {
+    const obj = { role: m.role, content: m.content };
+    if (fmtOpts.tok) obj.tokens = tokStr(m.tokens);
+    return obj;
+  });
+  const obj = {
+    title: CONV.title,
+    model: CONV.model,
+    author: CONV.author,
+    updated: CONV.updated,
+    messages: msgs,
+  };
+  if (fmtOpts.cit) obj.citations = CONV.citations;
+
+  function highlight(json) {
+    return json
+      .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+        if (/^"/.test(m)) {
+          if (/:$/.test(m)) return `<span class="jk">${esc(m)}</span>`;
+          return `<span class="js">${esc(m)}</span>`;
+        }
+        if (/true|false|null/.test(m)) return `<span class="jb">${m}</span>`;
+        return `<span class="jn">${m}</span>`;
+      });
+  }
+
+  return highlight(JSON.stringify(obj, null, 2));
+}
+
+function renderHTML() {
+  const msgs = getMsgs();
+  const panel = document.getElementById('panel-html');
+  panel.innerHTML = '';
+
+  const title = document.createElement('div');
+  title.className = 'hp-title';
+  title.textContent = CONV.title;
+  panel.appendChild(title);
+
+  const meta = document.createElement('div');
+  meta.className = 'hp-meta';
+  meta.textContent = `${CONV.model} · ${CONV.author} · ${CONV.updated}`;
+  panel.appendChild(meta);
+
+  msgs.forEach(m => {
+    const div = document.createElement('div');
+    div.className = `hp-msg ${m.role}`;
+    const roleLabel = m.role === 'user' ? '👤 User' : m.role === 'thinking' ? '💭 Thinking' : '🤖 Model';
+    const tok = fmtOpts.tok ? ` · ${tokStr(m.tokens)} tokens` : '';
+    div.innerHTML = `<div class="hp-role">${roleLabel}${tok}</div><div>${esc(m.content)}</div>`;
+    panel.appendChild(div);
+  });
+
+  if (fmtOpts.cit) {
+    const src = document.createElement('div');
+    src.style.marginTop = '10px';
+    src.innerHTML = `<div style="font-weight:600;font-size:0.8rem;color:#888;margin-bottom:4px;">Sources</div>`;
+    CONV.citations.forEach(c => {
+      const a = document.createElement('div');
+      a.style.cssText = 'font-size:0.75rem;color:#4285f4;word-break:break-all;';
+      a.textContent = c;
+      src.appendChild(a);
+    });
+    panel.appendChild(src);
+  }
+}
+
+function renderFormats() {
+  document.getElementById('panel-md').textContent = renderMarkdown();
+  document.getElementById('panel-json').innerHTML = renderJSON();
+  renderHTML();
+}
+
+renderFormats();
+
+/* ════════════════════════════════════════════════════════════════════
+   SECTION 5 — BULK EXPORT
+═════════════════════════════════════════════════════════════════════ */
+const FAKE_TITLES = [
+  'Async Python','React hooks','SQL joins','CSS grid','Rust lifetimes',
+  'Git rebase','Docker nets','K8s pods','GraphQL','WebSockets',
+  'Linear alg','Fourier','OAuth2','JWT tokens','REST API',
+  'Regex tips','Vim motions','Shell scripts','Make files','WASM',
+];
+
+let bulkState = { tiles: [], running: false, timer: null, pageTimer: null, pagesDone: 0, totalPages: 0 };
+
+function bulkBuildUI() {
+  const count = parseInt(document.getElementById('bulk-count').value);
+  document.getElementById('bulk-count-val').textContent = count;
+  const pages = Math.ceil(count / 100);
+  bulkState.totalPages = pages;
+
+  // Page cards
+  const row = document.getElementById('page-cards-row');
+  row.innerHTML = '';
+  for (let i = 0; i < pages; i++) {
+    const card = document.createElement('div');
+    card.className = 'page-card';
+    card.id = `page-card-${i}`;
+    card.textContent = `Page ${i+1} · ${i < pages-1 ? 100 : count - i*100} prompts`;
+    row.appendChild(card);
+    if (i < pages - 1) {
+      const arr = document.createElement('span');
+      arr.className = 'page-arrow';
+      arr.textContent = ' → ';
+      row.appendChild(arr);
+    }
+  }
+
+  // Tiles
+  const grid = document.getElementById('tile-grid');
+  grid.innerHTML = '';
+  bulkState.tiles = [];
+  for (let i = 0; i < count; i++) {
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    tile.textContent = FAKE_TITLES[i % FAKE_TITLES.length];
+    grid.appendChild(tile);
+    bulkState.tiles.push({ el: tile, state: 'idle', isFailed: Math.random() < 0.05 });
+  }
+
+  document.getElementById('bulk-counter').textContent = '0 conversations found';
+  document.getElementById('progress-fill').style.width = '0%';
+  document.getElementById('progress-label').textContent = `0 / ${count}`;
+}
+
+function bulkReset() {
+  if (bulkState.timer) clearInterval(bulkState.timer);
+  if (bulkState.pageTimer) clearInterval(bulkState.pageTimer);
+  bulkState.running = false;
+  bulkState.pagesDone = 0;
+  document.getElementById('bulk-run-btn').textContent = '▶ Run';
+  bulkBuildUI();
+}
+
+function bulkRun() {
+  if (bulkState.running) return;
+  bulkState.running = true;
+  document.getElementById('bulk-run-btn').textContent = '⏳ Running…';
+
+  const count = bulkState.tiles.length;
+  const delay = parseInt(document.getElementById('bulk-delay').value);
+
+  // Phase 1: page cards animate in
+  let pagesDone = 0;
+  let found = 0;
+  const pageInterval = Math.max(300, delay * 3);
+
+  function showNextPage() {
+    if (pagesDone >= bulkState.totalPages) {
+      clearInterval(bulkState.pageTimer);
+      // Mark last page done
+      const lastCard = document.getElementById(`page-card-${bulkState.totalPages - 1}`);
+      if (lastCard) { lastCard.classList.add('done'); lastCard.textContent += ' ✓ done'; }
+      startExportLoop();
+      return;
+    }
+    const card = document.getElementById(`page-card-${pagesDone}`);
+    if (card) card.classList.add('visible');
+    const perPage = pagesDone < bulkState.totalPages - 1 ? 100 : count - pagesDone * 100;
+    found += perPage;
+    document.getElementById('bulk-counter').textContent = `${found} conversations found`;
+    if (pagesDone > 0) {
+      const prev = document.getElementById(`page-card-${pagesDone - 1}`);
+      if (prev) { prev.classList.add('done'); }
+    }
+    pagesDone++;
+  }
+
+  bulkState.pageTimer = setInterval(showNextPage, pageInterval);
+
+  function startExportLoop() {
+    let tileIdx = 0;
+    let doneCount = 0;
+
+    function processNext() {
+      if (tileIdx >= count) return;
+      const t = bulkState.tiles[tileIdx];
+      tileIdx++;
+
+      // Fetch phase
+      t.el.className = 'tile fetching';
+      t.el.textContent = '⬇';
+
+      setTimeout(() => {
+        // Parsing
+        t.el.className = 'tile parsing';
+        t.el.textContent = '⚙';
+
+        setTimeout(() => {
+          if (t.isFailed) {
+            t.el.className = 'tile failed';
+            t.el.textContent = '✗';
+          } else {
+            t.el.className = 'tile done';
+            t.el.textContent = '✓';
+          }
+          doneCount++;
+          const pct = (doneCount / count * 100).toFixed(1);
+          document.getElementById('progress-fill').style.width = pct + '%';
+          document.getElementById('progress-label').textContent = `${doneCount} / ${count}`;
+          if (doneCount >= count) {
+            document.getElementById('bulk-run-btn').textContent = '✓ Done';
+            bulkState.running = false;
+          }
+        }, Math.max(30, delay * 0.6));
+
+      }, Math.max(30, delay * 0.4));
+
+      if (tileIdx < count) {
+        setTimeout(processNext, Math.max(10, delay));
+      }
+    }
+
+    processNext();
+  }
+}
+
+document.getElementById('bulk-count').oninput = function() { bulkBuildUI(); };
+document.getElementById('bulk-delay').oninput = function() {
+  document.getElementById('bulk-delay-val').textContent = this.value + ' ms';
+};
+
+bulkBuildUI();
+
+/* ════════════════════════════════════════════════════════════════════
+   SECTION 6 — MUTATION OBSERVER DEMO
+═════════════════════════════════════════════════════════════════════ */
+let obsTimer = null;
+let obsStartTime = null;
+let obsMsgCount = 0;
+
+const MESSAGES_POOL = [
+  { role: 'user', icon: '👤', text: 'Can you help me debug this?' },
+  { role: 'model', icon: '🤖', text: 'Sure! Let me take a look.' },
+  { role: 'user', icon: '👤', text: 'What about async/await?' },
+  { role: 'model', icon: '🤖', text: 'Great question! Here is how it works...' },
+  { role: 'user', icon: '👤', text: 'Can you show an example?' },
+  { role: 'model', icon: '🤖', text: 'Of course! Here is a code snippet.' },
+];
+
+function obsLog(type, text) {
+  const t = obsStartTime ? ((Date.now() - obsStartTime) / 1000).toFixed(1) : '0.0';
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = `<span class="log-time">[t=${t}s]</span> <span class="log-${type}">${text}</span>`;
+  const container = document.getElementById('obs-log-entries');
+  container.appendChild(entry);
+  const logPanel = document.getElementById('obs-log');
+  logPanel.scrollTop = logPanel.scrollHeight;
+}
+
+function obsAddMessage() {
+  const delay = parseInt(document.getElementById('obs-delay').value);
+  const msgDef = MESSAGES_POOL[obsMsgCount % MESSAGES_POOL.length];
+  obsMsgCount++;
+
+  // Animate eye pulse
+  const eye = document.getElementById('obs-eye');
+  eye.classList.remove('pulse');
+  void eye.offsetWidth;
+  eye.classList.add('pulse');
+  setTimeout(() => eye.classList.remove('pulse'), 700);
+
+  // Add DOM row
+  const domRows = document.getElementById('dom-rows');
+  const row = document.createElement('div');
+  row.className = 'dom-row new-row';
+  row.innerHTML = `
+    <span class="msg-icon">${msgDef.icon}</span>
+    <span style="font-size:0.75rem;color:#888;">${msgDef.role}</span>
+    <span style="font-size:0.7rem;color:#555;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${msgDef.text}</span>
+    <div class="msg-btns">
+      <span class="msg-btn" id="obs-menu-${obsMsgCount}">⋮</span>
+    </div>`;
+  domRows.appendChild(row);
+  if (domRows.children.length > 6) {
+    domRows.removeChild(domRows.children[0]);
+  }
+
+  obsLog('mutation', `Mutation detected — 1 new node added`);
+  obsLog('call', `enhanceMessages() called`);
+  obsLog('found', `Found message without data-ais-enhanced`);
+
+  setTimeout(() => {
+    obsLog('action', `menu click simulated (${delay}ms wait)`);
+
+    const btns = row.querySelector('.msg-btns');
+    if (btns) {
+      const branchBtn = document.createElement('span');
+      branchBtn.className = 'msg-btn injected';
+      branchBtn.textContent = '⑂ Branch';
+      btns.appendChild(branchBtn);
+
+      const delBtn = document.createElement('span');
+      delBtn.className = 'msg-btn injected';
+      delBtn.textContent = '🗑 Delete';
+      btns.appendChild(delBtn);
+    }
+
+    obsLog('action', `⑂ Branch button injected`);
+    obsLog('action', `🗑 Delete button injected`);
+    obsLog('set', `data-ais-enhanced = "true" set`);
+  }, delay);
+}
+
+function obsStart() {
+  obsStartTime = Date.now();
+  document.getElementById('obs-log-entries').innerHTML = '';
+  document.getElementById('dom-rows').innerHTML = '';
+  obsMsgCount = 0;
+  obsLog('set', `MutationObserver.observe(document.body) started`);
+
+  function scheduleNext() {
+    const rate = parseInt(document.getElementById('obs-rate').value);
+    obsTimer = setTimeout(() => {
+      obsAddMessage();
+      scheduleNext();
+    }, rate);
+  }
+  scheduleNext();
+}
+
+function obsReset() {
+  if (obsTimer) clearTimeout(obsTimer);
+  obsTimer = null;
+  document.getElementById('obs-log-entries').innerHTML = '';
+  document.getElementById('dom-rows').innerHTML = '';
+  obsMsgCount = 0;
+  obsStartTime = null;
+  obsStart();
+}
+
+document.getElementById('obs-rate').oninput = function() {
+  document.getElementById('obs-rate-val').textContent = this.value + ' ms';
+};
+document.getElementById('obs-delay').oninput = function() {
+  document.getElementById('obs-delay-val').textContent = this.value + ' ms';
+};
+
+// Start observer when section becomes visible
+const obsSection = document.getElementById('s-observer');
+const obsIO = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting && !obsTimer) {
+      obsStart();
+    } else if (!e.isIntersecting && obsTimer) {
+      clearTimeout(obsTimer);
+      obsTimer = null;
+    }
+  });
+}, { threshold: 0.3 });
+obsIO.observe(obsSection);
+
+</script>
+</body>
+</html>
